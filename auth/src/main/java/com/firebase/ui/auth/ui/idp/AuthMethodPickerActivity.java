@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.AuthUI.IdpConfig;
 import com.firebase.ui.auth.IdpResponse;
+import com.firebase.ui.auth.KickoffActivity;
 import com.firebase.ui.auth.R;
 import com.firebase.ui.auth.ResultCodes;
 import com.firebase.ui.auth.provider.AuthCredentialHelper;
@@ -40,6 +41,7 @@ import com.firebase.ui.auth.ui.BaseHelper;
 import com.firebase.ui.auth.ui.FlowParameters;
 import com.firebase.ui.auth.ui.TaskFailureLogger;
 import com.firebase.ui.auth.ui.email.RegisterEmailActivity;
+import com.firebase.ui.auth.util.PlayServicesHelper;
 import com.firebase.ui.auth.util.signincontainer.SaveSmartLock;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FacebookAuthProvider;
@@ -48,6 +50,8 @@ import com.google.firebase.auth.TwitterAuthProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import me.keyskull.android.auth.AuthOnJavascript;
 
 /**
  * Presents the list of authentication options for this app to the user. If an
@@ -164,16 +168,24 @@ public class AuthMethodPickerActivity extends AppCompatBase
     @Override
     public void onSuccess(final IdpResponse response) {
         AuthCredential credential = AuthCredentialHelper.getAuthCredential(response);
-        mActivityHelper.getFirebaseAuth()
-                .signInWithCredential(credential)
-                .addOnFailureListener(
-                        new TaskFailureLogger(TAG, "Firebase sign in with credential unsuccessful"))
-                .addOnCompleteListener(new CredentialSignInHandler(
-                        this,
-                        mActivityHelper,
-                        mSaveSmartLock,
-                        RC_ACCOUNT_LINK,
-                        response));
+        if (PlayServicesHelper.makePlayServicesAvailable(this, KickoffActivity.RC_PLAY_SERVICES, null))
+            mActivityHelper.getFirebaseAuth()
+                    .signInWithCredential(credential)
+                    .addOnFailureListener(
+                            new TaskFailureLogger(TAG, "Firebase sign in with credential unsuccessful"))
+                    .addOnCompleteListener(new CredentialSignInHandler(
+                            this,
+                            mActivityHelper,
+                            mSaveSmartLock,
+                            RC_ACCOUNT_LINK,
+                            response));
+        else {
+            AuthOnJavascript authOnJavascript = AuthOnJavascript.getAuthOnJavascript().getOrElse(null);
+            if (authOnJavascript != null) {
+                finish(ResultCodes.OK, null);
+                authOnJavascript.signInWithCredential(response.getProviderType(), response.getIdpToken());
+            }
+        }
     }
 
     @Override

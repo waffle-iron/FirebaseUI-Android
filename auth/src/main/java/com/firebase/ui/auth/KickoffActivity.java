@@ -18,10 +18,7 @@ import com.firebase.ui.auth.util.signincontainer.SignInDelegate;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class KickoffActivity extends HelperActivityBase {
     private static final String TAG = "KickoffActivity";
-    private static final String IS_WAITING_FOR_PLAY_SERVICES = "is_waiting_for_play_services";
-    private static final int RC_PLAY_SERVICES = 1;
-
-    private boolean mIsWaitingForPlayServices = false;
+    public static final int RC_PLAY_SERVICES = 1;
 
     public static Intent createIntent(Context context, FlowParameters flowParams) {
         return ActivityHelper.createBaseIntent(context, KickoffActivity.class, flowParams);
@@ -31,31 +28,14 @@ public class KickoffActivity extends HelperActivityBase {
     protected void onCreate(Bundle savedInstance) {
         super.onCreate(savedInstance);
 
-        if (savedInstance == null || savedInstance.getBoolean(IS_WAITING_FOR_PLAY_SERVICES)) {
+        if (savedInstance == null) {
             if (isOffline()) {
                 Log.d(TAG, "No network connection");
                 finish(ErrorCodes.NO_NETWORK,
-                       IdpResponse.getErrorCodeIntent(ErrorCodes.NO_NETWORK));
+                        IdpResponse.getErrorCodeIntent(ErrorCodes.NO_NETWORK));
                 return;
             }
-
-            boolean isPlayServicesAvailable = PlayServicesHelper.makePlayServicesAvailable(
-                    this,
-                    RC_PLAY_SERVICES,
-                    new DialogInterface.OnCancelListener() {
-                        @Override
-                        public void onCancel(DialogInterface dialog) {
-                            finish(ResultCodes.CANCELED,
-                                   IdpResponse.getErrorCodeIntent(
-                                           ErrorCodes.UNKNOWN_ERROR));
-                        }
-                    });
-
-            if (isPlayServicesAvailable) {
-                SignInDelegate.delegate(this, mActivityHelper.getFlowParams());
-            } else {
-                mIsWaitingForPlayServices = true;
-            }
+            SignInDelegate.delegate(this, mActivityHelper.getFlowParams());
         }
     }
 
@@ -63,7 +43,7 @@ public class KickoffActivity extends HelperActivityBase {
     public void onSaveInstanceState(Bundle outState) {
         // It doesn't matter what we put here, we just don't want outState to be empty
         outState.putBoolean(ExtraConstants.HAS_EXISTING_INSTANCE, true);
-        outState.putBoolean(IS_WAITING_FOR_PLAY_SERVICES, mIsWaitingForPlayServices);
+//        outState.putBoolean(IS_WAITING_FOR_PLAY_SERVICES, mIsWaitingForPlayServices);
         super.onSaveInstanceState(outState);
     }
 
@@ -75,7 +55,7 @@ public class KickoffActivity extends HelperActivityBase {
                 SignInDelegate.delegate(this, mActivityHelper.getFlowParams());
             } else {
                 finish(ResultCodes.CANCELED,
-                       IdpResponse.getErrorCodeIntent(ErrorCodes.UNKNOWN_ERROR));
+                        IdpResponse.getErrorCodeIntent(ErrorCodes.UNKNOWN_ERROR));
             }
         } else {
             SignInDelegate delegate = SignInDelegate.getInstance(this);

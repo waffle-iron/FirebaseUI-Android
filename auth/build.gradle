@@ -1,4 +1,10 @@
+repositories{
+    maven { url 'https://dl.bintray.com/somethingworng/maven/' }
+}
+
+
 apply plugin: 'com.android.library'
+apply plugin: "jp.leafytree.android-scala"
 apply plugin: 'io.fabric'
 apply from: '../library/quality/quality.gradle'
 
@@ -49,6 +55,14 @@ dependencies {
     testCompile 'org.robolectric:robolectric:3.2.2'
     // See https://github.com/robolectric/robolectric/issues/1932#issuecomment-219796474
     testCompile 'org.khronos:opengl-api:gl1.1-android-2.1_r1'
+
+    compile 'org.scala-lang:scala-library:2.11.8'
+    compile "com.android.support:multidex:1.0.1"
+    androidTestCompile "com.android.support:multidex-instrumentation:1.0.1", {
+        exclude module: "multidex"
+    }
+    compile 'org.xwalk:xwalk_core_library:23.53.589.4'
+    compile 'me.keyskull:util_2.11:1.0-Beta'
 }
 
 javadoc.exclude([
@@ -61,3 +75,12 @@ javadoc.exclude([
 javadoc.include([
         'com/google/firebase/auth/**'
 ])
+
+tasks.withType(ScalaCompile) {
+    // If you want to use scala compile daemon
+//    scalaCompileOptions.useCompileDaemon = true
+    // Suppress deprecation warnings
+    scalaCompileOptions.deprecation = false
+    // Additional parameters
+    scalaCompileOptions.additionalParameters = ["-feature"]
+}
