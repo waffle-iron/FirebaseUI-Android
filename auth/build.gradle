@@ -1,12 +1,11 @@
-repositories{
-    maven { url 'https://dl.bintray.com/somethingworng/maven/' }
-}
-
-
 apply plugin: 'com.android.library'
 apply plugin: "jp.leafytree.android-scala"
 apply plugin: 'io.fabric'
 apply from: '../library/quality/quality.gradle'
+
+repositories{
+    maven { url 'https://dl.bintray.com/somethingworng/maven/' }
+}
 
 android {
     compileSdkVersion compileSdk

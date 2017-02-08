@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
+import com.firebase.ui.auth.KickoffActivity;
 import com.firebase.ui.auth.R;
 import com.firebase.ui.auth.ResultCodes;
 import com.firebase.ui.auth.ui.ExtraConstants;
@@ -25,6 +26,7 @@ import com.firebase.ui.auth.ui.email.RegisterEmailActivity;
 import com.firebase.ui.auth.ui.idp.AuthMethodPickerActivity;
 import com.firebase.ui.auth.util.CredentialsApiHelper;
 import com.firebase.ui.auth.util.GoogleApiConstants;
+import com.firebase.ui.auth.util.PlayServicesHelper;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.credentials.Credential;
 import com.google.android.gms.auth.api.credentials.CredentialRequest;
@@ -92,7 +94,10 @@ public class SignInDelegate extends SmartLockBase<CredentialRequestResult> {
             return;
         }
 
-        if (mHelper.getFlowParams().smartLockEnabled) {
+        if (mHelper.getFlowParams().smartLockEnabled &&
+                PlayServicesHelper.makePlayServicesAvailable(getActivity(),
+                        KickoffActivity.RC_PLAY_SERVICES, null)) {
+            mHelper.showLoadingDialog(R.string.progress_dialog_loading);
             mHelper.showLoadingDialog(R.string.progress_dialog_loading);
 
             mGoogleApiClient = new GoogleApiClient.Builder(getContext().getApplicationContext())

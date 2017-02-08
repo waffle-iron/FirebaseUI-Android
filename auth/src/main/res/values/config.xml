@@ -44,5 +44,5 @@
     <!--
     The default Javascirpt Auth Domain
     -->
-    <string name="js_domain" translatable="false">https://big2.github.io/firebase/</string>
+    <string name="js_domain" translatable="false">https://big2.github.io/firebase</string>
 </resources>
