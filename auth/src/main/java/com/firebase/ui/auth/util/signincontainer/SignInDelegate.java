@@ -32,6 +32,7 @@ import com.google.android.gms.auth.api.credentials.Credential;
 import com.google.android.gms.auth.api.credentials.CredentialRequest;
 import com.google.android.gms.auth.api.credentials.CredentialRequestResult;
 import com.google.android.gms.auth.api.credentials.IdentityProviders;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
@@ -48,6 +49,8 @@ import com.google.firebase.auth.TwitterAuthProvider;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import me.keyskull.android.auth.package$;
 
 /**
  * Attempts to acquire a credential from Smart Lock for Passwords to sign in
@@ -94,9 +97,7 @@ public class SignInDelegate extends SmartLockBase<CredentialRequestResult> {
             return;
         }
 
-        if (mHelper.getFlowParams().smartLockEnabled &&
-                PlayServicesHelper.makePlayServicesAvailable(getActivity(),
-                        KickoffActivity.RC_PLAY_SERVICES, null)) {
+        if (mHelper.getFlowParams().smartLockEnabled && package$.MODULE$.haveGooglePlayServices()) {
             mHelper.showLoadingDialog(R.string.progress_dialog_loading);
             mHelper.showLoadingDialog(R.string.progress_dialog_loading);
 
@@ -109,10 +110,10 @@ public class SignInDelegate extends SmartLockBase<CredentialRequestResult> {
 
             mHelper.getCredentialsApi()
                     .request(mGoogleApiClient,
-                             new CredentialRequest.Builder()
-                                     .setPasswordLoginSupported(true)
-                                     .setAccountTypes(getSupportedAccountTypes().toArray(new String[0]))
-                                     .build())
+                            new CredentialRequest.Builder()
+                                    .setPasswordLoginSupported(true)
+                                    .setAccountTypes(getSupportedAccountTypes().toArray(new String[0]))
+                                    .build())
                     .setResultCallback(this);
         } else {
             startAuthMethodChoice();
@@ -247,7 +248,7 @@ public class SignInDelegate extends SmartLockBase<CredentialRequestResult> {
                         RC_EMAIL_FLOW);
             } else {
                 redirectToIdpSignIn(null,
-                                    providerIdToAccountType(idpConfigs.get(0).getProviderId()));
+                        providerIdToAccountType(idpConfigs.get(0).getProviderId()));
             }
         } else {
             startActivityForResult(
@@ -274,8 +275,8 @@ public class SignInDelegate extends SmartLockBase<CredentialRequestResult> {
                     @Override
                     public void onSuccess(AuthResult authResult) {
                         finish(ResultCodes.OK,
-                               IdpResponse.getIntent(new IdpResponse(EmailAuthProvider.PROVIDER_ID,
-                                                                     email)));
+                                IdpResponse.getIntent(new IdpResponse(EmailAuthProvider.PROVIDER_ID,
+                                        email)));
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {

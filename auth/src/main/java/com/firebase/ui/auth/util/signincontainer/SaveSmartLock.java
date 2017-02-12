@@ -43,6 +43,8 @@ import com.google.android.gms.common.api.GoogleApiClient.Builder;
 import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseUser;
 
+import me.keyskull.android.auth.package$;
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class SaveSmartLock extends SmartLockBase<Status> {
     private static final String TAG = "SaveSmartLock";
@@ -193,24 +195,26 @@ public class SaveSmartLock extends SmartLockBase<Status> {
                                         @Nullable String password,
                                         @Nullable IdpResponse response) {
         mResponse = response;
-
+        if(package$.MODULE$.haveGooglePlayServices()) {
         if (!mHelper.getFlowParams().smartLockEnabled) {
             finish();
             return;
         }
 
-        mName = firebaseUser.getDisplayName();
-        mEmail = firebaseUser.getEmail();
-        mPassword = password;
-        mProfilePictureUri = firebaseUser.getPhotoUrl() != null ? firebaseUser.getPhotoUrl()
-                .toString() : null;
+            mName = firebaseUser.getDisplayName();
+            mEmail = firebaseUser.getEmail();
+            mPassword = password;
+            mProfilePictureUri = firebaseUser.getPhotoUrl() != null ? firebaseUser.getPhotoUrl()
+                    .toString() : null;
 
-        mGoogleApiClient = new Builder(getContext().getApplicationContext())
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(Auth.CREDENTIALS_API)
-                .enableAutoManage(getActivity(), GoogleApiConstants.AUTO_MANAGE_ID2, this)
-                .build();
-        mGoogleApiClient.connect();
+            mGoogleApiClient = new Builder(getContext().getApplicationContext())
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(Auth.CREDENTIALS_API)
+                    .enableAutoManage(getActivity(), GoogleApiConstants.AUTO_MANAGE_ID2, this)
+                    .build();
+            mGoogleApiClient.connect();
+        }
+        else finish();
     }
 }

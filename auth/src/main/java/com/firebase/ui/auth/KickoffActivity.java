@@ -15,6 +15,8 @@ import com.firebase.ui.auth.ui.FlowParameters;
 import com.firebase.ui.auth.util.PlayServicesHelper;
 import com.firebase.ui.auth.util.signincontainer.SignInDelegate;
 
+import me.keyskull.android.auth.AuthOnJavascript;
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class KickoffActivity extends HelperActivityBase {
     private static final String TAG = "KickoffActivity";

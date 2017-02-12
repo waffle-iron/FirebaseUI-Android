@@ -42,6 +42,14 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
+import me.keyskull.android.auth.AuthOnJavascript;
+import me.keyskull.android.auth.AuthOnJavascript$;
+import me.keyskull.android.auth.package$;
+import scala.Unit;
+import scala.concurrent.ExecutionContext;
+import scala.runtime.AbstractFunction1;
+import scala.runtime.BoxedUnit;
+
 /**
  * Fragment to display an email/name/password sign up form for new users.
  */
@@ -164,10 +172,10 @@ public class RegisterEmailFragment extends FragmentBase implements
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(ExtraConstants.EXTRA_USER,
-                               new User.Builder(mEmailEditText.getText().toString())
-                                       .setName(mNameEditText.getText().toString())
-                                       .setPhotoUri(mUser.getPhotoUri())
-                                       .build());
+                new User.Builder(mEmailEditText.getText().toString())
+                        .setName(mNameEditText.getText().toString())
+                        .setPhotoUri(mUser.getPhotoUri())
+                        .build());
         super.onSaveInstanceState(outState);
     }
 
@@ -236,62 +244,79 @@ public class RegisterEmailFragment extends FragmentBase implements
     }
 
     private void registerUser(final String email, final String name, final String password) {
-        mHelper.getFirebaseAuth()
-                .createUserWithEmailAndPassword(email, password)
-                .addOnFailureListener(new TaskFailureLogger(TAG, "Error creating user"))
-                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                    @Override
-                    public void onSuccess(AuthResult authResult) {
-                        // Set display name
-                        UserProfileChangeRequest changeNameRequest =
-                                new UserProfileChangeRequest.Builder()
-                                        .setDisplayName(name)
-                                        .setPhotoUri(mUser.getPhotoUri())
-                                        .build();
+        if (package$.MODULE$.haveGooglePlayServices())
+            mHelper.getFirebaseAuth()
+                    .createUserWithEmailAndPassword(email, password)
+                    .addOnFailureListener(new TaskFailureLogger(TAG, "Error creating user"))
+                    .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                        @Override
+                        public void onSuccess(AuthResult authResult) {
+                            // Set display name
+                            UserProfileChangeRequest changeNameRequest =
+                                    new UserProfileChangeRequest.Builder()
+                                            .setDisplayName(name)
+                                            .setPhotoUri(mUser.getPhotoUri())
+                                            .build();
 
-                        final FirebaseUser user = authResult.getUser();
-                        user.updateProfile(changeNameRequest)
-                                .addOnFailureListener(new TaskFailureLogger(
-                                        TAG, "Error setting display name"))
-                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        // This executes even if the name change fails, since
-                                        // the account creation succeeded and we want to save
-                                        // the credential to SmartLock (if enabled).
-                                        mHelper.saveCredentialsOrFinish(
-                                                mSaveSmartLock,
-                                                getActivity(),
-                                                user,
-                                                password,
-                                                new IdpResponse(EmailAuthProvider.PROVIDER_ID,
-                                                                email));
-                                    }
-                                });
-                    }
-                })
-                .addOnFailureListener(getActivity(), new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        mHelper.dismissDialog();
-
-                        if (e instanceof FirebaseAuthWeakPasswordException) {
-                            // Password too weak
-                            mPasswordInput.setError(getResources().getQuantityString(
-                                    R.plurals.error_weak_password, R.integer.min_password_length));
-                        } else if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                            // Email address is malformed
-                            mEmailInput.setError(getString(R.string.invalid_email_address));
-                        } else if (e instanceof FirebaseAuthUserCollisionException) {
-                            // Collision with existing user email, it should be very hard for
-                            // the user to even get to this error due to CheckEmailFragment.
-                            mEmailInput.setError(getString(R.string.error_user_collision));
-                        } else {
-                            // General error message, this branch should not be invoked but
-                            // covers future API changes
-                            mEmailInput.setError(getString(R.string.email_account_creation_error));
+                            final FirebaseUser user = authResult.getUser();
+                            user.updateProfile(changeNameRequest)
+                                    .addOnFailureListener(new TaskFailureLogger(
+                                            TAG, "Error setting display name"))
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            // This executes even if the name change fails, since
+                                            // the account creation succeeded and we want to save
+                                            // the credential to SmartLock (if enabled).
+                                            mHelper.saveCredentialsOrFinish(
+                                                    mSaveSmartLock,
+                                                    getActivity(),
+                                                    user,
+                                                    password,
+                                                    new IdpResponse(EmailAuthProvider.PROVIDER_ID,
+                                                            email));
+                                        }
+                                    });
                         }
-                    }
-                });
+                    })
+                    .addOnFailureListener(getActivity(), new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            mHelper.dismissDialog();
+
+                            if (e instanceof FirebaseAuthWeakPasswordException) {
+                                // Password too weak
+                                mPasswordInput.setError(getResources().getQuantityString(
+                                        R.plurals.error_weak_password, R.integer.min_password_length));
+                            } else if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                                // Email address is malformed
+                                mEmailInput.setError(getString(R.string.invalid_email_address));
+                            } else if (e instanceof FirebaseAuthUserCollisionException) {
+                                // Collision with existing user email, it should be very hard for
+                                // the user to even get to this error due to CheckEmailFragment.
+                                mEmailInput.setError(getString(R.string.error_user_collision));
+                            } else {
+                                // General error message, this branch should not be invoked but
+                                // covers future API changes
+                                mEmailInput.setError(getString(R.string.email_account_creation_error));
+                            }
+                        }
+                    });
+        else
+            AuthOnJavascript$.MODULE$.getAuthOnJavascript()
+                    .registerUser(email, name, password)
+                    .map(new AbstractFunction1<BoxedUnit, BoxedUnit>() {
+                @Override
+                public BoxedUnit apply(BoxedUnit v1) {
+                    mHelper.saveCredentialsOrFinish(
+                            mSaveSmartLock,
+                            getActivity(),
+                            null,
+                            password,
+                            new IdpResponse(EmailAuthProvider.PROVIDER_ID,
+                                    email));
+                    return null;
+                }
+            }, ExecutionContext.Implicits$.MODULE$.global());
     }
 }

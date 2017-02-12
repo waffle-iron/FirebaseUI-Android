@@ -50,6 +50,11 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 
+import me.keyskull.android.auth.AuthOnJavascript;
+import me.keyskull.android.auth.package$;
+import scala.concurrent.ExecutionContext;
+import scala.runtime.AbstractFunction1;
+
 /**
  * Activity to link a pre-existing email/password account to a new IDP sign-in by confirming
  * the password before initiating a link.
@@ -129,49 +134,70 @@ public class WelcomeBackPasswordPrompt extends AppCompatBase implements View.OnC
         }
         mActivityHelper.showLoadingDialog(R.string.progress_dialog_signing_in);
 
-        final FirebaseAuth firebaseAuth = mActivityHelper.getFirebaseAuth();
-        // Sign in with known email and the password provided
-        firebaseAuth.signInWithEmailAndPassword(email, password)
-                .addOnFailureListener(
-                        new TaskFailureLogger(TAG, "Error signing in with email and password"))
-                .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                    @Override
-                    public void onSuccess(AuthResult authResult) {
-                        AuthCredential authCredential =
-                                AuthCredentialHelper.getAuthCredential(mIdpResponse);
+        if(package$.MODULE$.haveGooglePlayServices()) {
+            final FirebaseAuth firebaseAuth = mActivityHelper.getFirebaseAuth();
+            // Sign in with known email and the password provided
+            firebaseAuth.signInWithEmailAndPassword(email, password)
+                    .addOnFailureListener(
+                            new TaskFailureLogger(TAG, "Error signing in with email and password"))
+                    .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                        @Override
+                        public void onSuccess(AuthResult authResult) {
+                            AuthCredential authCredential =
+                                    AuthCredentialHelper.getAuthCredential(mIdpResponse);
 
-                        // If authCredential is null, the user only has an email account.
-                        // Otherwise, the user has an email account that we need to link to an idp.
-                        if (authCredential == null) {
-                            mActivityHelper.saveCredentialsOrFinish(
-                                    mSaveSmartLock,
-                                    authResult.getUser(),
-                                    password,
-                                    new IdpResponse(EmailAuthProvider.PROVIDER_ID, email));
-                        } else {
-                            authResult.getUser()
-                                    .linkWithCredential(authCredential)
-                                    .addOnFailureListener(new TaskFailureLogger(
-                                            TAG, "Error signing in with credential"))
-                                    .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                                        @Override
-                                        public void onSuccess(AuthResult authResult) {
-                                            mActivityHelper.saveCredentialsOrFinish(
-                                                    mSaveSmartLock,
-                                                    authResult.getUser(),
-                                                    mIdpResponse);
-                                        }
-                                    });
+                            // If authCredential is null, the user only has an email account.
+                            // Otherwise, the user has an email account that we need to link to an idp.
+                            if (authCredential == null) {
+                                mActivityHelper.saveCredentialsOrFinish(
+                                        mSaveSmartLock,
+                                        authResult.getUser(),
+                                        password,
+                                        new IdpResponse(EmailAuthProvider.PROVIDER_ID, email));
+                            } else {
+                                authResult.getUser()
+                                        .linkWithCredential(authCredential)
+                                        .addOnFailureListener(new TaskFailureLogger(
+                                                TAG, "Error signing in with credential"))
+                                        .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                                            @Override
+                                            public void onSuccess(AuthResult authResult) {
+                                                mActivityHelper.saveCredentialsOrFinish(
+                                                        mSaveSmartLock,
+                                                        authResult.getUser(),
+                                                        mIdpResponse);
+                                            }
+                                        });
+                            }
                         }
-                    }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        mActivityHelper.dismissDialog();
-                        String error = e.getLocalizedMessage();
-                        mPasswordLayout.setError(error);
-                    }
-                });
+                    })
+                    .addOnFailureListener(this, new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            mActivityHelper.dismissDialog();
+                            String error = e.getLocalizedMessage();
+                            mPasswordLayout.setError(error);
+                        }
+                    });
+        }else AuthOnJavascript.getAuthOnJavascript().loginWithPassword(email, password).map(new AbstractFunction1<Object, Object>() {
+            @Override
+            public Object apply(Object v1) {
+                AuthCredential authCredential =
+                        AuthCredentialHelper.getAuthCredential(mIdpResponse);
+
+                // If authCredential is null, the user only has an email account.
+                // Otherwise, the user has an email account that we need to link to an idp.
+                if (authCredential == null)
+                    mActivityHelper.saveCredentialsOrFinish(
+                            mSaveSmartLock,
+                            null,
+                            password,
+                            new IdpResponse(EmailAuthProvider.PROVIDER_ID, email));
+                else {
+                    //TODO add js link
+                }
+                return null;
+            }
+        }, ExecutionContext.Implicits$.MODULE$.global());
     }
 }

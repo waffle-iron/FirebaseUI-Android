@@ -46,6 +46,9 @@ import java.util.Iterator;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import me.keyskull.android.auth.AuthOnJavascript;
+import me.keyskull.android.auth.UserInfo;
+import me.keyskull.android.auth.package$;
 
 public class SignedInActivity extends AppCompatActivity {
     @BindView(android.R.id.content)
@@ -68,14 +71,12 @@ public class SignedInActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        UserInfo currentUser = package$.MODULE$.getUserInfo().getOrElse(null);
         if (currentUser == null) {
             startActivity(AuthUiActivity.createIntent(this));
             finish();
             return;
         }
-
         mIdpResponse = IdpResponse.fromResultIntent(getIntent());
 
         setContentView(R.layout.signed_in_layout);
@@ -136,7 +137,7 @@ public class SignedInActivity extends AppCompatActivity {
 
     @MainThread
     private void populateProfile() {
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        UserInfo user = package$.MODULE$.getUserInfo().getOrElse(null);
         if (user.getPhotoUrl() != null) {
             Glide.with(this)
                     .load(user.getPhotoUrl())

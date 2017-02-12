@@ -47,6 +47,9 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import me.keyskull.android.auth.UserInfo;
+import me.keyskull.android.auth.package$;
+import scala.runtime.AbstractFunction0;
 
 public class AuthUiActivity extends AppCompatActivity {
     private static final String UNCHANGED_CONFIG_VALUE = "CHANGE-ME";
@@ -124,8 +127,13 @@ public class AuthUiActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() != null) {
+        UserInfo currentUser = package$.MODULE$.getUserInfo().getOrElse(new AbstractFunction0<UserInfo>() {
+            @Override
+            public UserInfo apply() {
+                return null;
+            }
+        });
+        if (currentUser != null) {
             startActivity(SignedInActivity.createIntent(this, null));
             finish();
         }

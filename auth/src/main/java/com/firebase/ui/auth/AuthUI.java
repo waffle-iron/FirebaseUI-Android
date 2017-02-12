@@ -57,6 +57,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import me.keyskull.android.auth.package$;
+
 /**
  * The entry point to the AuthUI authentication flow, and related utility methods.
  * If your application uses the default {@link FirebaseApp} instance, an AuthUI instance can
@@ -77,14 +79,14 @@ import java.util.Set;
  * implemented by this library:
  * <p>
  * <ul>
- *     <li>The set of authentication methods desired can be specified.</li>
- *     <li>The terms of service URL for your app can be specified, which is included as a link
- *         in the small-print of the account creation step for new users. If no terms of service
- *         URL is provided, the associated small-print is omitted.
- *     </li>
- *     <li>A custom theme can specified for the flow, which is applied to all the activities in
- *         the flow for consistent customization of colors and typography.
- *     </li>
+ * <li>The set of authentication methods desired can be specified.</li>
+ * <li>The terms of service URL for your app can be specified, which is included as a link
+ * in the small-print of the account creation step for new users. If no terms of service
+ * URL is provided, the associated small-print is omitted.
+ * </li>
+ * <li>A custom theme can specified for the flow, which is applied to all the activities in
+ * the flow for consistent customization of colors and typography.
+ * </li>
  * </ul>
  * <p>
  * <p>
@@ -168,17 +170,17 @@ import java.util.Set;
  * With the integrations provided by AuthUI, signing out a user is a multi-stage process:
  * <p>
  * <ol>
- *     <li>The user must be signed out of the {@link FirebaseAuth} instance.</li>
- *     <li>Smart Lock for Passwords must be instructed to disable automatic sign-in, in
- *         order to prevent an automatic sign-in loop that prevents the user from switching
- *         accounts.
- *     </li>
- *     <li>If the current user signed in using either Google or Facebook, the user must also be
- *         signed out using the associated API for that authentication method. This typically
- *         ensures that the user will not be automatically signed-in using the current account
- *         when using that authentication method again from the authentication method picker, which
- *         would also prevent the user from switching between accounts on the same provider.
- *     </li>
+ * <li>The user must be signed out of the {@link FirebaseAuth} instance.</li>
+ * <li>Smart Lock for Passwords must be instructed to disable automatic sign-in, in
+ * order to prevent an automatic sign-in loop that prevents the user from switching
+ * accounts.
+ * </li>
+ * <li>If the current user signed in using either Google or Facebook, the user must also be
+ * signed out using the associated API for that authentication method. This typically
+ * ensures that the user will not be automatically signed-in using the current account
+ * when using that authentication method again from the authentication method picker, which
+ * would also prevent the user from switching between accounts on the same provider.
+ * </li>
  * </ol>
  * <p>
  * In order to make this process easier, AuthUI provides a simple
@@ -319,40 +321,8 @@ public class AuthUI {
      * ({@code !result.isSuccess()}).
      */
     public Task<Void> signOut(@NonNull Activity activity) {
-        // Get helper for Google Sign In and Credentials API
-        GoogleApiClientTaskHelper taskHelper = GoogleApiClientTaskHelper.getInstance(activity);
-        taskHelper.getBuilder()
-                .addApi(Auth.CREDENTIALS_API)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, GoogleSignInOptions.DEFAULT_SIGN_IN);
-
-        // Get Credentials Helper
-        CredentialsApiHelper credentialsHelper = CredentialsApiHelper.getInstance(taskHelper);
-
-        // Firebase Sign out
-        mAuth.signOut();
-
-        // Disable credentials auto sign-in
-        Task<Status> disableCredentialsTask = credentialsHelper.disableAutoSignIn();
-
-        // Google sign out
-        Task<Void> googleSignOutTask = taskHelper.getConnectedGoogleApiClient()
-                .continueWith(new Continuation<GoogleApiClient, Void>() {
-                    @Override
-                    public Void then(@NonNull Task<GoogleApiClient> task) throws Exception {
-                        if (task.isSuccessful()) {
-                            Auth.GoogleSignInApi.signOut(task.getResult());
-                        }
-                        return null;
-                    }
-                });
-
-        // Facebook sign out
-        if (FacebookSdk.isInitialized()) {
-            LoginManager.getInstance().logOut();
-        }
-
         // Wait for all tasks to complete
-        return Tasks.whenAll(disableCredentialsTask, googleSignOutTask);
+        return package$.MODULE$.signOut(activity);
     }
 
     /**
@@ -569,8 +539,8 @@ public class AuthUI {
             for (IdpConfig idpConfig : idpConfigs) {
                 if (configuredProviders.contains(idpConfig.getProviderId())) {
                     throw new IllegalArgumentException("Each provider can only be set once. "
-                                                               + idpConfig.getProviderId()
-                                                               + " was set twice.");
+                            + idpConfig.getProviderId()
+                            + " was set twice.");
                 }
                 configuredProviders.add(idpConfig.getProviderId());
                 mProviders.add(idpConfig);
@@ -628,11 +598,11 @@ public class AuthUI {
         @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
         public FlowParameters getFlowParams() {
             return new FlowParameters(mApp.getName(),
-                                      new ArrayList<>(mProviders),
-                                      mTheme,
-                                      mLogo,
-                                      mTosUrl,
-                                      mIsSmartLockEnabled);
+                    new ArrayList<>(mProviders),
+                    mTheme,
+                    mLogo,
+                    mTosUrl,
+                    mIsSmartLockEnabled);
         }
     }
 }

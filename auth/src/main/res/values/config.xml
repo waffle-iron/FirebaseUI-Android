@@ -28,6 +28,10 @@
     https://developers.google.com/android/guides/google-services-plugin
     -->
     <string name="default_web_client_id" translatable="false">CHANGE-ME</string>
+    <string name="google_app_id" translatable="false">CHANGE-ME</string>
+    <string name="google_api_key" translatable="false">CHANGE-ME</string>
+    <string name="firebase_database_url" translatable="false">CHANGE-ME</string>
+    <string name="gcm_defaultSenderId" translatable="false">CHANGE-ME</string>
 
 
     <!--

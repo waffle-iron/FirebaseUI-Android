@@ -38,6 +38,14 @@ import com.google.firebase.auth.ProviderQueryResult;
 
 import java.util.List;
 
+import me.keyskull.android.auth.AuthOnJavascript;
+import me.keyskull.android.auth.package$;
+import scala.Function1;
+import scala.concurrent.ExecutionContext;
+import scala.runtime.AbstractFunction1;
+import scala.runtime.AbstractPartialFunction;
+import scala.util.Try;
+
 /**
  * Fragment that shows a form with an email field and checks for existing accounts with that
  * email.
@@ -176,6 +184,7 @@ public class CheckEmailFragment extends FragmentBase implements View.OnClickList
         mHelper.showLoadingDialog(R.string.progress_dialog_checking_accounts);
 
         if (!TextUtils.isEmpty(email)) {
+            if(package$.MODULE$.haveGooglePlayServices())
             mHelper.getFirebaseAuth()
                     .fetchProvidersForEmail(email)
                     .addOnFailureListener(
@@ -204,9 +213,9 @@ public class CheckEmailFragment extends FragmentBase implements View.OnClickList
                                         }
 
                                         mListener.onNewUser(new User.Builder(email)
-                                                                    .setName(name)
-                                                                    .setPhotoUri(photoUri)
-                                                                    .build());
+                                                .setName(name)
+                                                .setPhotoUri(photoUri)
+                                                .build());
                                     } else if (EmailAuthProvider.PROVIDER_ID.equalsIgnoreCase(providers.get(0))) {
                                         mListener.onExistingEmailUser(new User.Builder(email).build());
                                     } else {
@@ -217,11 +226,44 @@ public class CheckEmailFragment extends FragmentBase implements View.OnClickList
                                     }
                                 }
                             });
+            else{
+                AuthOnJavascript.getAuthOnJavascript().fetchProvidersForEmail(email)
+                        .map(new AbstractFunction1<List<String>,List<String>>() {
+                    @Override
+                    public List<String> apply(List<String> v1) {
+                        List<String> providers = v1;
+                        if (providers == null || providers.isEmpty()) {
+                            // Get name from SmartLock, if possible
+                            String name = null;
+                            Uri photoUri = null;
+                            if (mLastCredential != null && mLastCredential.getId().equals(email)) {
+                                name = mLastCredential.getName();
+                                photoUri = mLastCredential.getProfilePictureUri();
+                            }
+
+                            mListener.onNewUser(new User.Builder(email)
+                                    .setName(name)
+                                    .setPhotoUri(photoUri)
+                                    .build());
+                        } else if (EmailAuthProvider.PROVIDER_ID.equalsIgnoreCase(providers.get(0))) {
+                            mListener.onExistingEmailUser(new User.Builder(email).build());
+                        } else {
+                            mListener.onExistingIdpUser(
+                                    new User.Builder(email)
+                                            .setProvider(providers.get(0))
+                                            .build());
+                        }
+                        mHelper.dismissDialog();
+                        return null;
+                    }
+                }, ExecutionContext.Implicits$.MODULE$.global());
+            }
         }
     }
 
     private void showEmailAutoCompleteHint() {
         try {
+            if(package$.MODULE$.haveGooglePlayServices())
             mHelper.startIntentSenderForResult(getEmailHintIntent().getIntentSender(), RC_HINT);
         } catch (IntentSender.SendIntentException e) {
             Log.e(TAG, "Unable to start hint intent", e);
@@ -232,19 +274,19 @@ public class CheckEmailFragment extends FragmentBase implements View.OnClickList
         GoogleApiClient client = new GoogleApiClient.Builder(getContext())
                 .addApi(Auth.CREDENTIALS_API)
                 .enableAutoManage(getActivity(), GoogleApiConstants.AUTO_MANAGE_ID3,
-                                  new GoogleApiClient.OnConnectionFailedListener() {
-                                      @Override
-                                      public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-                                          Log.e(TAG,
-                                                "Client connection failed: " + connectionResult.getErrorMessage());
-                                      }
-                                  })
+                        new GoogleApiClient.OnConnectionFailedListener() {
+                            @Override
+                            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                                Log.e(TAG,
+                                        "Client connection failed: " + connectionResult.getErrorMessage());
+                            }
+                        })
                 .build();
 
         HintRequest hintRequest = new HintRequest.Builder()
                 .setHintPickerConfig(new CredentialPickerConfig.Builder()
-                                             .setShowCancelButton(true)
-                                             .build())
+                        .setShowCancelButton(true)
+                        .build())
                 .setEmailAddressIdentifierSupported(true)
                 .build();
 
