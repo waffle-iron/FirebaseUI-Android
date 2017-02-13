@@ -34,6 +34,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 
+import me.keyskull.android.auth.AuthOnJavascript;
+import me.keyskull.android.auth.package$;
+
 /**
  * Activity to initiate the "forgot password" flow by asking for the user's email.
  */
@@ -67,6 +70,7 @@ public class RecoverPasswordActivity extends AppCompatBase implements View.OnCli
     }
 
     private void next(final String email) {
+        if(package$.MODULE$.haveGooglePlayServices())
         mActivityHelper.getFirebaseAuth()
                 .sendPasswordResetEmail(email)
                 .addOnFailureListener(
@@ -89,6 +93,9 @@ public class RecoverPasswordActivity extends AppCompatBase implements View.OnCli
                         }
                     }
                 });
+        else {
+            AuthOnJavascript.getAuthOnJavascript();
+        }
     }
 
     @Override

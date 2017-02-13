@@ -42,10 +42,8 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
-import me.keyskull.android.auth.AuthOnJavascript;
 import me.keyskull.android.auth.AuthOnJavascript$;
 import me.keyskull.android.auth.package$;
-import scala.Unit;
 import scala.concurrent.ExecutionContext;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.BoxedUnit;
@@ -244,8 +242,7 @@ public class RegisterEmailFragment extends FragmentBase implements
     }
 
     private void registerUser(final String email, final String name, final String password) {
-        if (package$.MODULE$.haveGooglePlayServices())
-            mHelper.getFirebaseAuth()
+        if (package$.MODULE$.haveGooglePlayServices()) mHelper.getFirebaseAuth()
                     .createUserWithEmailAndPassword(email, password)
                     .addOnFailureListener(new TaskFailureLogger(TAG, "Error creating user"))
                     .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
@@ -302,9 +299,7 @@ public class RegisterEmailFragment extends FragmentBase implements
                             }
                         }
                     });
-        else
-            AuthOnJavascript$.MODULE$.getAuthOnJavascript()
-                    .registerUser(email, name, password)
+        else AuthOnJavascript$.MODULE$.getAuthOnJavascript().createUserWithEmailAndPassword(email, name, password)
                     .map(new AbstractFunction1<BoxedUnit, BoxedUnit>() {
                 @Override
                 public BoxedUnit apply(BoxedUnit v1) {

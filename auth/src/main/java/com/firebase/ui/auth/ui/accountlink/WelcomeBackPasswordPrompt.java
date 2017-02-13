@@ -54,6 +54,7 @@ import me.keyskull.android.auth.AuthOnJavascript;
 import me.keyskull.android.auth.package$;
 import scala.concurrent.ExecutionContext;
 import scala.runtime.AbstractFunction1;
+import scala.runtime.BoxedUnit;
 
 /**
  * Activity to link a pre-existing email/password account to a new IDP sign-in by confirming
@@ -179,12 +180,13 @@ public class WelcomeBackPasswordPrompt extends AppCompatBase implements View.OnC
                             mPasswordLayout.setError(error);
                         }
                     });
-        }else AuthOnJavascript.getAuthOnJavascript().loginWithPassword(email, password).map(new AbstractFunction1<Object, Object>() {
+        }else AuthOnJavascript.getAuthOnJavascript()
+                .loginWithPassword(email, password)
+                .map(new AbstractFunction1<BoxedUnit, BoxedUnit>() {
             @Override
-            public Object apply(Object v1) {
+            public BoxedUnit apply(BoxedUnit v1) {
                 AuthCredential authCredential =
                         AuthCredentialHelper.getAuthCredential(mIdpResponse);
-
                 // If authCredential is null, the user only has an email account.
                 // Otherwise, the user has an email account that we need to link to an idp.
                 if (authCredential == null)

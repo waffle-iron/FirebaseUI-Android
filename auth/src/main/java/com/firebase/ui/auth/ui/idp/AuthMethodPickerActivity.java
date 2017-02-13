@@ -60,6 +60,7 @@ import scala.Function1;
 import scala.concurrent.*;
 import scala.concurrent.ExecutionContext;
 import scala.runtime.AbstractFunction1;
+import scala.runtime.BoxedUnit;
 
 /**
  * Presents the list of authentication options for this app to the user. If an
@@ -191,9 +192,9 @@ public class AuthMethodPickerActivity extends AppCompatBase
             AuthOnJavascript
                     .getAuthOnJavascript()
                     .signInWithCredential(response.getProviderType(), response.getIdpToken())
-                    .map(new AbstractFunction1<Object, Object>() {//for java 7
+                    .map(new AbstractFunction1<BoxedUnit, BoxedUnit>() {//for java 7
                         @Override
-                        public Object apply(Object v1) {
+                        public BoxedUnit apply(BoxedUnit v1) {
                             finish(ResultCodes.OK, null);
                             return null;
                         }
